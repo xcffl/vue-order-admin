@@ -154,7 +154,8 @@ export default {
         for (let i = keys.length; i--; )
           document.cookie = keys[i] + "=0;expires=" + new Date(0).toUTCString();
       }
-      this.$router.push("/login");
+      AV.User.logOut();
+      +this.$router.push("/login");
     },
 
     _fetchOrderList() {
