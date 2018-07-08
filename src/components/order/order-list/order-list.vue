@@ -28,7 +28,7 @@
       <div
         v-if="order_list.length"
         class="order_box"
-        v-for="order in order_list" :key="order.order_id">
+        v-for="order in order_list" :key="order.objectId">
         <header class="thead">
           {{order.order_name}}
 
@@ -36,20 +36,20 @@
             备注：{{order.comment || '暂无备注'}}
           </span>
 
-          <el-button @click.stop.native="downloadPDF(order.order_id)" size="small" type="primary" class="export_order_btn fr">导出订单</el-button>
+          <el-button @click.stop.native="downloadPDF(order.objectId)" size="small" type="primary" class="export_order_btn fr">导出订单</el-button>
 
-          <router-link tag="i" :to="/order-detail/ + order.order_id" class="i fr i-edit"></router-link>
+          <router-link tag="i" :to="/order-detail/ + order.objectId" class="i fr i-edit"></router-link>
           <span class="fr">
             订单总额：{{order.sum}}
           </span>
           <span class="fr">
-            创建时间：{{order.created_time | getLocalTime}}
+            创建时间：{{order.createdAt | getLocalTime}}
           </span>
         </header>
 
-        <router-link tag="ul" :to="/order-detail/ + order.order_id" class="img_list">
+        <!-- <router-link tag="ul" :to="/order-detail/ + order.objectId" class="img_list">
           <li v-for="img_src in order.img_list.slice(0, 7)" :key="img_src" :style="backgroundImage(img_src)"></li>
-        </router-link>
+        </router-link> -->
       </div>
 
       <h1 v-if="!order_list.length">没有数据</h1>
@@ -67,243 +67,288 @@
 </template>
 
 <script>
-  import { backgroundImage } from 'common/js/mixins'
-  import { CLEAR_FETCH_GOODS_LIST_PARAMS } from 'store/mutation-types'
-  export default {
-    data() {
-      return {
-        loading: false,
-        order_name: '',
-        search_key: '',
-        page_index: 1,
-        page_size: 6,
-        page_count: 1,
-        dialogFormVisible: false,
-        order_list: [],
+import { AV } from "common/js/initLeanCloud";
+
+import { backgroundImage } from "common/js/mixins";
+import { CLEAR_FETCH_GOODS_LIST_PARAMS } from "store/mutation-types";
+export default {
+  data() {
+    return {
+      loading: false,
+      order_name: "",
+      search_key: "",
+      page_index: 1,
+      page_size: 6,
+      page_count: 1,
+      dialogFormVisible: false,
+      order_list: []
+    };
+  },
+
+  mixins: [backgroundImage],
+
+  created() {
+    // page_index 一旦改变就触发 onPageChange 事件有点不妥，故加了这个变量做限制
+    this.onPageChangeLock = false;
+    this._fetchOrderList();
+  },
+
+  filters: {
+    getLocalTime(timestamp) {
+      const date = new Date(timestamp);
+      let Y = date.getFullYear(),
+        m = date.getMonth() + 1,
+        d = date.getDate(),
+        H = date.getHours(),
+        i = date.getMinutes(),
+        s = date.getSeconds();
+      if (m < 10) {
+        m = "0" + m;
       }
-    },
-
-    mixins: [backgroundImage],
-
-    created() {
-      // page_index 一旦改变就触发 onPageChange 事件有点不妥，故加了这个变量做限制
-      this.onPageChangeLock = false
-      this._fetchOrderList()
-    },
-
-    filters: {
-      getLocalTime(timestamp) {
-        const date = new Date(timestamp)
-        let Y = date.getFullYear(),
-          m = date.getMonth()+1,
-          d = date.getDate(),
-          H = date.getHours(),
-          i = date.getMinutes(),
-          s = date.getSeconds()
-        if(m<10){
-          m = '0'+m;
-        }
-        if(d<10){
-          d = '0'+d;
-        }
-        if(H<10){
-          H = '0'+H;
-        }
-        if(i<10){
-          i = '0'+i;
-        }
-        if(s<10){
-          s = '0'+s;
-        }
-        return Y+'-'+m+'-'+d+' '+H+':'+i+':'+s;
+      if (d < 10) {
+        d = "0" + d;
       }
+      if (H < 10) {
+        H = "0" + H;
+      }
+      if (i < 10) {
+        i = "0" + i;
+      }
+      if (s < 10) {
+        s = "0" + s;
+      }
+      return Y + "-" + m + "-" + d + " " + H + ":" + i + ":" + s;
+    }
+  },
+
+  methods: {
+    addOrder() {
+      if (!this.order_name) {
+        this.$message.error("请输入订单名称！", "error");
+        return;
+      }
+      const DATA = {
+        order_name: this.order_name
+      };
+
+      this.$http.post("order/add_order", DATA).then(res => {
+        this.dialogFormVisible = false;
+        if (!res || !res.data) return;
+        const order_id = res.data;
+        if (order_id) {
+          this.$store.commit(CLEAR_FETCH_GOODS_LIST_PARAMS);
+          this.$router.push(`/goods-list/${order_id}`);
+        } else {
+          this.$message.error("创建订单失败！", "error");
+        }
+      });
     },
 
-    methods: {
-      addOrder() {
-        if (!this.order_name) {
-          this.$message.error('请输入订单名称！', 'error')
-          return
-        }
-        const DATA = {
-          order_name: this.order_name
-        }
+    downloadPDF(id) {
+      window.open(process.env.BASE_API + "order/order_excel?objectId=" + id);
+    },
 
-        this.$http.post('order/add_order', DATA).then(res => {
-          this.dialogFormVisible = false
-          if (!res || !res.data) return
-          const order_id = res.data
-          if (order_id) {
-            this.$store.commit(CLEAR_FETCH_GOODS_LIST_PARAMS)
-            this.$router.push(`/goods-list/${order_id}`)
-          } else {
-            this.$message.error('创建订单失败！', 'error')
+    logout() {
+      const keys = document.cookie.match(/[^ =;]+(?=\=)/g);
+      if (keys) {
+        for (let i = keys.length; i--; )
+          document.cookie = keys[i] + "=0;expires=" + new Date(0).toUTCString();
+      }
+      this.$router.push("/login");
+    },
+
+    _fetchOrderList() {
+      const params = {
+        page_index: this.page_index,
+        page_size: this.page_size,
+        search_key: this.search_key
+      };
+      this.loading = true;
+
+      // // LeanCloud - 对象
+      // // https://leancloud.cn/docs/leanstorage_guide-js.html#数据类型
+      // var Product = AV.Object.extend("Product");
+      // var product = new Product();
+      // product.set("order_name", "gewgew");
+      // product.set("price", 132);
+      // product.set("description", "description");
+      // product.set("owner", AV.User.current());
+      // product.save();
+      // console.log("Add a product");
+
+      // LeanCloud - 查询
+      // https://leancloud.cn/docs/leanstorage_guide-js.html#查询
+      var that = this;
+      var query = new AV.Query("Product");
+      query.include("owner");
+      query.include("image");
+      query.descending("createdAt");
+      query
+        .find()
+        .then(function(products) {
+          if (products) {
+            products.forEach(element => {
+              var product = element.attributes;
+              product.createdAt = element.createdAt;
+
+              that.order_list.push(product);
+            });
+            console.log(products[1].attributes);
+            // const { orderListVos = [], page_count = 1 } = products;
+            // this.order_list = products;
+            // console.log(products);
+            that.page_count = 1;
+            that.loading = false;
           }
+          console.log("nothing here");
         })
-      },
+        .catch(function(error) {
+          console.log("Get an error");
 
-      downloadPDF(id) {
-        window.open(process.env.BASE_API + 'order/order_excel?order_id=' + id)
-      },
+          alert(JSON.stringify(error));
+        });
 
-      logout() {
-        const keys=document.cookie.match(/[^ =;]+(?=\=)/g);
-        if (keys) {
-          for (let i = keys.length; i--;)
-            document.cookie=keys[i]+'=0;expires=' + new Date( 0).toUTCString()
-        }
-        this.$router.push('/login')
-      },
-
-      _fetchOrderList() {
-        const params = {
-          page_index: this.page_index,
-          page_size: this.page_size,
-          search_key: this.search_key,
-        }
-        this.loading = true
-
-        this.$http.get('order/order_list', {params} ).then(res => {
-          if (res) {
-            const {
-              orderListVos = [], page_count = 1
-            } = res.data
-            this.order_list = orderListVos
-            this.page_count = page_count
-            this.loading = false
-          }
-        }).catch(error => this.loading = false)
-      },
-
-      // 搜索
-      searchOrder() {
-        // 只要搜索传值了，后端会把所有的条件置空去搜索，尽管这样前端还是得把一些条件给清空
-        // 改变 pageIndex 时会自动触发 onPageChange 事件，故需要设置 onPageChangeLock
-        if(this.pageIndex !== 1) {
-          this.onPageChangeLock = true
-          this.pageIndex = 1
-        }
-        this._fetchOrderList()
-      },
-
-      // 选择页码
-      onPageChange(page) {
-        if(this.onPageChangeLock) {
-          this.onPageChangeLock = false
-          return
-        }
-        this.page_index = page
-        this._fetchOrderList()
-      },
+      //   this.$http
+      //     .get("order/order_list", { params })
+      //     .then(res => {
+      //       if (res) {
+      //         const { orderListVos = [], page_count = 1 } = res.data;
+      //         this.order_list = orderListVos;
+      //         this.page_count = page_count;
+      //         this.loading = false;
+      //       }
+      //     })
+      //     .catch(error => (this.loading = false));
     },
+
+    // 搜索
+    searchOrder() {
+      // 只要搜索传值了，后端会把所有的条件置空去搜索，尽管这样前端还是得把一些条件给清空
+      // 改变 pageIndex 时会自动触发 onPageChange 事件，故需要设置 onPageChangeLock
+      if (this.pageIndex !== 1) {
+        this.onPageChangeLock = true;
+        this.pageIndex = 1;
+      }
+      this._fetchOrderList();
+    },
+
+    // 选择页码
+    onPageChange(page) {
+      if (this.onPageChangeLock) {
+        this.onPageChangeLock = false;
+        return;
+      }
+      this.page_index = page;
+      this._fetchOrderList();
+    }
   }
+};
 </script>
 
 <style lang="scss" scoped>
-  .header_nav {
-    padding: 0 30px;
-    width: 100%;
-    height: 60px;
-    line-height: 60px;
-    background: #eee;
+.header_nav {
+  padding: 0 30px;
+  width: 100%;
+  height: 60px;
+  line-height: 60px;
+  background: #eee;
 
-    .add_order {
-      margin-top: 12px;
-      margin-right: 60px;
-      width: 150px;
+  .add_order {
+    margin-top: 12px;
+    margin-right: 60px;
+    width: 150px;
+  }
+
+  .logo {
+    width: 150px;
+    height: 50px;
+    vertical-align: middle;
+  }
+
+  .logout {
+    margin-top: 10px;
+    margin-left: 20px;
+  }
+
+  .search_input {
+    width: 200px;
+  }
+}
+
+.order_list_container {
+  margin-top: 30px;
+  margin-left: 20px;
+  margin-right: 20px;
+
+  .order_box {
+    margin-bottom: 20px;
+    display: block;
+    background: #fff;
+
+    &:hover {
+      background: rgba(227, 232, 238, 0.33);
+    }
+  }
+
+  .thead {
+    color: #3a3a3a;
+    height: 36px;
+    line-height: 36px;
+    padding: 0 50px;
+    border-bottom: 1px #e3e8ee solid;
+    font-size: 14px;
+
+    .export_order_btn {
+      margin-top: 4px;
+      margin-left: 30px;
     }
 
-    .logo {
-      width: 150px;
-      height: 50px;
-      vertical-align: middle;
-    }
-
-    .logout {
-      margin-top: 10px;
+    .fr {
       margin-left: 20px;
     }
 
-    .search_input {
-      width: 200px;
-    }
-  }
-
-  .order_list_container {
-    margin-top: 30px;
-    margin-left: 20px;
-    margin-right: 20px;
-
-    .order_box {
-      margin-bottom: 20px;
-      display: block;
-      background: #fff;
-
-      &:hover {
-        background: rgba(227, 232, 238, 0.33);
-      }
-    }
-
-    .thead {
-      color: #3a3a3a;
-      height: 36px;
-      line-height: 36px;
-      padding: 0 50px;
-      border-bottom: 1px #e3e8ee solid;
-      font-size: 14px;
-
-      .export_order_btn {
-        margin-top: 4px;
-        margin-left: 30px;
-      }
-
-      .fr {
-        margin-left: 20px;
-      }
-
-      .i-edit {
-        margin-top: 2px;
-        width: 30px;
-        height: 30px;
-        line-height: 30px;
-        color: #0142a1;
-        border-radius: 50%;
-        text-align: center;
-        border: 1px #0142a1 solid;
-        font-size: 20px;
-        cursor: pointer;
-      }
-    }
-
-
-    .order_note {
-      margin-top: 10px;
-      padding-left: 2%;
-      width: 98%;
-      color: #666;
-      font-size: 14px;
-      line-height: 18px;
-    }
-
-    .img_list {
-      margin: 0;
-      width: 100%;
-      height: 100px;
+    .i-edit {
+      margin-top: 2px;
+      width: 30px;
+      height: 30px;
+      line-height: 30px;
+      color: #0142a1;
+      border-radius: 50%;
+      text-align: center;
+      border: 1px #0142a1 solid;
+      font-size: 20px;
       cursor: pointer;
-
-      li {
-        display: inline-block;
-        width: 130px;
-        height: 100px;
-        margin-right: 10px;
-        background-size: contain;
-        overflow: hidden;
-      }
     }
   }
 
-  .page_list {
-    text-align: center;
-    margin: 20px auto;
+  .order_note {
+    margin-top: 10px;
+    padding-left: 2%;
+    width: 98%;
+    color: #666;
+    font-size: 14px;
+    line-height: 18px;
   }
+
+  .img_list {
+    margin: 0;
+    width: 100%;
+    height: 100px;
+    cursor: pointer;
+
+    li {
+      display: inline-block;
+      width: 130px;
+      height: 100px;
+      margin-right: 10px;
+      background-size: contain;
+      overflow: hidden;
+    }
+  }
+}
+
+.page_list {
+  text-align: center;
+  margin: 20px auto;
+}
 </style>

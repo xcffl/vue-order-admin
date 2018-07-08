@@ -17,52 +17,70 @@
   </div>
 </template>
 <script>
-  export default {
-    data() {
-      return {
-        labelPosition: 'right',
-        formLabelAlign: {
-          userName: '',
-          pwd: '',
-        }
-      };
-    },
-    methods: {
-      onSubmit() {
-        const { userName, pwd } = this.formLabelAlign
-        if(!userName) {
-          this.$message.error('请输入账号')
-          return
-        }
+import { AV } from "common/js/initLeanCloud";
 
-        if(!pwd) {
-          this.$message.error('请输入密码')
-          return
-        }
+console.log("logining");
 
-        const data = {
-          userName,
-          pwd,
-        }
-        this.$http.post('common/login', data).then(res => {
-          if(res.success) {
-            this.$router.push('/')
-          }
-        })
+export default {
+  data() {
+    return {
+      labelPosition: "right",
+      formLabelAlign: {
+        userName: "",
+        pwd: ""
       }
+    };
+  },
+  methods: {
+    onSubmit() {
+      const { userName, pwd } = this.formLabelAlign;
+      if (!userName) {
+        this.$message.error("请输入账号");
+        return;
+      }
+
+      if (!pwd) {
+        this.$message.error("请输入密码");
+        return;
+      }
+
+      // LeanCloud - 登录
+      // https://leancloud.cn/docs/leanstorage_guide-js.html#用户名和密码登录
+      AV.User.logIn(userName, pwd).then(
+        function(loginedUser) {
+          // 登录成功，跳转到商品 list 页面
+          console.log("Login!");
+
+          this.$router.push("/");
+        },
+        function(error) {
+          alert(JSON.stringify(error));
+        }
+      );
+
+      // const data = {
+      //   userName,
+      //   pwd,
+      // }
+      // this.$http.post('common/login', data).then(res => {
+      //   if(res.success) {
+      //     this.$router.push('/')
+      //   }
+      // })
     }
   }
+};
 </script>
 <style scoped>
-  .login_container {
-    padding-top: 30vh;
-    height: 70vh;
-    margin: auto;
-    width: 250px;
-  }
+.login_container {
+  padding-top: 30vh;
+  height: 70vh;
+  margin: auto;
+  width: 250px;
+}
 
-  .submit_btn {
-    display: inline-block;
-    width: 200px;
-  }
+.submit_btn {
+  display: inline-block;
+  width: 200px;
+}
 </style>
