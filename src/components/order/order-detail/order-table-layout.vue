@@ -8,7 +8,7 @@
     class="order_table"
     style="width: 100%">
     <el-table-column label="产品图" width="170">
-      <template scope="scope">
+      <template slot-scope="scope">
         <router-link
           tag="div"
           :to="'/goods-detail/' + $route.params.order_id + '/' + scope.row.sku + '?order_name=' + order_name"
@@ -19,7 +19,7 @@
     </el-table-column>
 
     <el-table-column label="产品基本信息" min-width="100">
-      <template scope="scope">
+      <template slot-scope="scope">
         <p class="text_ellipsis">{{scope.row.goods_name}}</p>
         <p class="text_ellipsis">{{scope.row.productNum}}</p>
         <p class="text_ellipsis">{{scope.row.material}}</p>
@@ -34,25 +34,25 @@
     </el-table-column>
 
     <el-table-column label="规格" width="100">
-      <template scope="scope">
+      <template slot-scope="scope">
         <p>{{scope.row.sizes}}</p>
       </template>
     </el-table-column>
 
     <el-table-column label="工期" width="80">
-      <template scope="scope">
+      <template slot-scope="scope">
         <p class="tc">{{scope.row.time_limit}}</p>
       </template>
     </el-table-column>
 
     <el-table-column label="单价" width="80">
-      <template scope="scope">
+      <template slot-scope="scope">
         <p class="tc">{{scope.row.price}}</p>
       </template>
     </el-table-column>
 
     <el-table-column label="数量" width="130">
-      <template scope="scope">
+      <template slot-scope="scope">
         <el-input-number
           size="small"
           style="width: 106px;"
@@ -64,7 +64,7 @@
     </el-table-column>
 
     <el-table-column label="利润 %" width="130">
-      <template scope="scope">
+      <template slot-scope="scope">
         <el-input-number
           size="small"
           style="width: 106px;"
@@ -78,27 +78,27 @@
 
 
     <el-table-column label="合价" width="80">
-      <template scope="scope">
+      <template slot-scope="scope">
         <p class="tc">{{scope.row.sum | computedTotal(scope.row.num, scope.row.profit, scope.row.price)}}</p>
       </template>
     </el-table-column>
 
 
     <el-table-column label="供应商" width="80">
-      <template scope="scope">
+      <template slot-scope="scope">
         <p class="tc">{{scope.row.supplier}}</p>
       </template>
     </el-table-column>
 
     <el-table-column label="备注" width="80">
-      <template scope="scope">
+      <template slot-scope="scope">
         <p @dblclick="openCommentDialog(scope.$index)" class="tc cursor">{{scope.row.comment || '暂无备注'}}</p>
       </template>
     </el-table-column>
 
 
     <el-table-column label="删除" width="70">
-      <template scope="scope">
+      <template slot-scope="scope">
         <el-button
           size="small"
           type="danger"
@@ -126,83 +126,87 @@
 </template>
 
 <script>
-  import { backgroundImage } from 'common/js/mixins'
-  import { mapState } from 'vuex'
-  import { UPDATE_ORDER_DETAIL_INDEX_VALUE } from 'store/mutation-types'
+import { backgroundImage } from "common/js/mixins";
+import { mapState } from "vuex";
+import { UPDATE_ORDER_DETAIL_INDEX_VALUE } from "store/mutation-types";
 
-  export default {
-    props: ['order_name'],
-    data() {
-      return {
-        dialogCommentForm: false,
-        currentEditCommentIndex: 0,
+export default {
+  props: ["order_name"],
+  data() {
+    return {
+      dialogCommentForm: false,
+      currentEditCommentIndex: 0
+    };
+  },
+
+  mixins: [backgroundImage],
+
+  filters: {
+    computedTotal(total, num, profit, price) {
+      const newTotal = num * (profit / 100 + 1) * price;
+      return Number(newTotal.toFixed(2));
+    }
+  },
+
+  computed: mapState(["orderDetail"]),
+
+  methods: {
+    changeOrderDetail(value, key, keyIndex) {
+      const params = { value, key, keyIndex };
+      this.$store.commit(UPDATE_ORDER_DETAIL_INDEX_VALUE, params);
+    },
+
+    deleteOrder(sku) {
+      const data = {
+        sku,
+        order_id: this.$route.params.order_id
+      };
+
+      this.$http.post("order/delete_goods", data).then(res => {
+        if (res && res.success) {
+          this.$message.success("删除商品成功！");
+          this.$emit("deleteGoods");
+        } else {
+          this.$message.error("删除商品失败！");
+        }
+      });
+    },
+
+    openCommentDialog(index) {
+      this.dialogCommentForm = true;
+      this.currentEditCommentIndex = index;
+    },
+
+    submitComment() {
+      let comment = this.$refs.commentIpt.$refs.textarea.value.trim();
+
+      if (comment.length > 50) {
+        return this.$message.error("最多不能超过 50字！");
       }
-    },
 
-    mixins: [backgroundImage],
-
-    filters: {
-      computedTotal(total, num, profit, price) {
-        const newTotal = num *(profit / 100 + 1) * price
-        return Number(newTotal.toFixed(2))
-      },
-    },
-
-    computed: mapState(['orderDetail']),
-
-    methods: {
-      changeOrderDetail(value, key, keyIndex) {
-        const params = { value, key, keyIndex }
-        this.$store.commit(UPDATE_ORDER_DETAIL_INDEX_VALUE, params)
-      },
-
-      deleteOrder(sku) {
-        const data = {
-          sku,
-          order_id: this.$route.params.order_id,
+      this.dialogCommentForm = false;
+      const params = {
+        value: comment,
+        key: "comment",
+        keyIndex: this.currentEditCommentIndex
+      };
+      this.$store.commit(UPDATE_ORDER_DETAIL_INDEX_VALUE, params);
+      const data = {
+        order_id: this.$route.params.order_id,
+        sku: this.orderDetail[this.currentEditCommentIndex].sku,
+        comment
+      };
+      this.$http.post("order/order_detail_comment", data).then(res => {
+        if (!res) return;
+        if (res.success) {
+          this.$message.success("添加备注成功！");
+        } else {
+          this.$message.error("添加备注失败！");
         }
-
-        this.$http.post('order/delete_goods', data).then(res => {
-          if(res && res.success) {
-            this.$message.success('删除商品成功！')
-            this.$emit('deleteGoods')
-          } else {
-            this.$message.error('删除商品失败！')
-          }
-        })
-      },
-
-      openCommentDialog(index) {
-        this.dialogCommentForm = true
-        this.currentEditCommentIndex = index
-      },
-
-      submitComment() {
-        let comment = this.$refs.commentIpt.$refs.textarea.value.trim()
-
-        if(comment.length > 50) {
-          return this.$message.error('最多不能超过 50字！')
-        }
-
-        this.dialogCommentForm = false
-        const params = { value: comment, key: 'comment', keyIndex: this.currentEditCommentIndex }
-        this.$store.commit(UPDATE_ORDER_DETAIL_INDEX_VALUE, params)
-        const data = {
-          order_id: this.$route.params.order_id,
-          sku: this.orderDetail[this.currentEditCommentIndex].sku,
-          comment,
-        }
-        this.$http.post('order/order_detail_comment', data).then(res => {
-          if(!res) return
-          if(res.success) {
-            this.$message.success('添加备注成功！')
-          } else {
-            this.$message.error('添加备注失败！')
-          }
-        })
-      },
-    },
+      });
+    }
   }
+};
 </script>
 
 <style lang="sass" scoped>

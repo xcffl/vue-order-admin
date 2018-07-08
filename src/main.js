@@ -11,6 +11,8 @@ import 'common/scss/index.scss'
 import 'element-ui/lib/theme-default/index.css'
 import AxiosPlugin from 'common/js/Axios'
 
+// import { AV } from 'common/js/initLeanCloud'
+
 Vue.use(AxiosPlugin)
 Vue.use(ElementUI)
 Vue.use(VueRouter)
@@ -29,5 +31,6 @@ new Vue({
   el: '#app',
   router,
   store,
-  render: h => h(App)
+  render: h => h(App),
+  
 })
