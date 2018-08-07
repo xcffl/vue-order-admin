@@ -26,11 +26,25 @@ router.beforeEach((to, from, next) => {
   next()
 })
 
+
+// Initialize LeanCloud
+import AV from 'leancloud-storage';
+
+var APP_ID = 'RiuJ8JBVvWEF4gV14m6BmzuF-MdYXbMMI';
+var APP_KEY = 'wo2lENlIhojPLiQFi3D8fFDR';
+
+AV.init({
+  appId: APP_ID,
+  appKey: APP_KEY,
+  region: 'us'
+});
+Vue.prototype.$AV = AV
+
 /* eslint-disable no-new */
 new Vue({
   el: '#app',
   router,
   store,
   render: h => h(App),
-  
+
 })

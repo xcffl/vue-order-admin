@@ -66,9 +66,8 @@
   </section>
 </template>
 
-<script>
-import { AV } from "common/js/initLeanCloud";
 
+<script>
 import { backgroundImage } from "common/js/mixins";
 import { CLEAR_FETCH_GOODS_LIST_PARAMS } from "store/mutation-types";
 export default {
@@ -154,7 +153,7 @@ export default {
         for (let i = keys.length; i--; )
           document.cookie = keys[i] + "=0;expires=" + new Date(0).toUTCString();
       }
-      AV.User.logOut();
+      this.$AV.User.logOut();
       +this.$router.push("/login");
     },
 
@@ -180,7 +179,8 @@ export default {
       // LeanCloud - 查询
       // https://leancloud.cn/docs/leanstorage_guide-js.html#查询
       var that = this;
-      var query = new AV.Query("Product");
+
+      var query = new this.$AV.Query("Product");
       query.include("owner");
       query.include("image");
       query.descending("createdAt");
@@ -194,7 +194,7 @@ export default {
 
               that.order_list.push(product);
             });
-            console.log(products[1].attributes);
+            // console.log(products[1].attributes);
             // const { orderListVos = [], page_count = 1 } = products;
             // this.order_list = products;
             // console.log(products);
@@ -204,7 +204,7 @@ export default {
           console.log("nothing here");
         })
         .catch(function(error) {
-          console.log("Get an error");
+          console.log("Get an error: " + error);
 
           alert(JSON.stringify(error));
         });
