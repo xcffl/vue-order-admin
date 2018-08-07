@@ -11,6 +11,11 @@ import 'common/scss/index.scss'
 import 'element-ui/lib/theme-default/index.css'
 import AxiosPlugin from 'common/js/Axios'
 
+// Vuetify
+import 'vuetify/dist/vuetify.min.css' // Ensure you are using css-loader
+
+import Vuetify from 'vuetify'
+
 // import { AV } from 'common/js/initLeanCloud'
 
 Vue.use(AxiosPlugin)
@@ -30,13 +35,12 @@ router.beforeEach((to, from, next) => {
 // Initialize LeanCloud
 import AV from 'leancloud-storage';
 
-var APP_ID = 'RiuJ8JBVvWEF4gV14m6BmzuF-MdYXbMMI';
-var APP_KEY = 'wo2lENlIhojPLiQFi3D8fFDR';
+var APP_ID = 'lAFCY204BRDxGlj7vBNrGGFV-9Nh9j0Va';
+var APP_KEY = '4PjNu9cSiIaY9E37EEs9AW9g';
 
 AV.init({
   appId: APP_ID,
   appKey: APP_KEY,
-  region: 'us'
 });
 Vue.prototype.$AV = AV
 
@@ -48,3 +52,4 @@ new Vue({
   render: h => h(App),
 
 })
+Vue.use(Vuetify)

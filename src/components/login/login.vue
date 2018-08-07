@@ -10,7 +10,7 @@
         </el-form-item>
 
         <el-form-item class="tc">
-          <el-button class="submit_btn" size="large" type="primary" @click="onSubmit">登录</el-button>
+          <v-btn class="submit_btn" size="large" type="primary" @click="onSubmit">登录</v-btn>
         </el-form-item>
       </el-form>
     </div>

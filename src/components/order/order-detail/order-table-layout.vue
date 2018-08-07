@@ -99,12 +99,12 @@
 
     <el-table-column label="删除" width="70">
       <template slot-scope="scope">
-        <el-button
+        <v-btn
           size="small"
           type="danger"
           @click="deleteOrder(scope.row.sku)">
           删除
-        </el-button>
+        </v-btn>
       </template>
     </el-table-column>
   </el-table>
@@ -117,10 +117,11 @@
       :value="orderDetail[currentEditCommentIndex].comment"
       ref="commentIpt">
     </el-input>
-    <div slot="footer" class="dialog-footer">
-      <el-button @click="dialogCommentForm = false">取 消</el-button>
-      <el-button type="primary" @click="submitComment">确 定</el-button>
-    </div>
+    <v-card-actions>
+      <v-spacer></v-spacer>
+      <v-btn flat @click="dialogCommentForm = false">取消</v-btn>
+      <v-btn color='primary' @click="submitComment">确定</v-btn>
+    </v-card-actions>
   </el-dialog>
 </div>
 </template>

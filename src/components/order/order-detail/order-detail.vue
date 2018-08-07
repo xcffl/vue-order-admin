@@ -7,21 +7,21 @@
       <section class="order_detail">
         <nav class="nav_container">
           <div class="box">
-            <el-button @click="$router.push('/')" type="text" icon="arrow-left">返回订单列表</el-button>
+            <v-btn @click="$router.push('/')" type="text" icon="arrow-left">返回订单列表</v-btn>
             <span class="order_name">订单：{{order_name}}</span>
             <p class="order_comment text_ellipsis" @dblclick="dialogCommentForm = true">
               备注:
               <span class="small">{{order_comment || '暂无备注'}}</span>
             </p>
-            <el-button @click="printPdf" class="pdf fr">导出订单</el-button>
+            <v-btn @click="printPdf" class="pdf fr">导出订单</v-btn>
           </div>
         </nav>
 
         <div class="content_box">
           <header class="header">
             <b class="subtitle">订单详情</b>
-            <el-button class="fr" type="primary" @click="saveOrder">保存订单</el-button>
-            <el-button class="fr mr30" type="text"><strong>合计：{{orderAmount}}</strong></el-button>
+            <v-btn class="fr" type="primary" @click="saveOrder">保存订单</v-btn>
+            <v-btn class="fr mr30" type="text"><strong>合计：{{orderAmount}}</strong></v-btn>
           </header>
 
           <order-table-layout :order_name="order_name" @deleteGoods="_fetchOrderDetail" class="order_table"></order-table-layout>
@@ -36,8 +36,8 @@
             ref="comment_ipt">
           </el-input>
           <div slot="footer" class="dialog-footer">
-            <el-button @click="dialogCommentForm = false">取 消</el-button>
-            <el-button type="primary" @click="submitComment">确 定</el-button>
+            <v-btn @click="dialogCommentForm = false">取 消</v-btn>
+            <v-btn type="primary" @click="submitComment">确 定</v-btn>
           </div>
         </el-dialog>
       </section>
@@ -46,7 +46,7 @@
         <div class="content_box">
           <header class="header">
             <b class="subtitle">第三方商品</b>
-            <el-button class="fr" type="primary" @click="addOtherGoods">添加商品</el-button>
+            <v-btn class="fr" type="primary" @click="addOtherGoods">添加商品</v-btn>
           </header>
 
           <other-goods-layout

@@ -9,8 +9,8 @@
       </ul>
 
       <div class="btn_area fr">
-        <el-button class="edit_button" @click="editOtherGoods">修改</el-button>
-        <el-button @click="deleteGoods" type="danger">删除</el-button>
+        <v-btn class="edit_button" @click="editOtherGoods">修改</v-btn>
+        <v-btn @click="deleteGoods" type="danger">删除</v-btn>
       </div>
     </div>
 

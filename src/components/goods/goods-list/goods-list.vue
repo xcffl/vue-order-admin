@@ -16,7 +16,7 @@
             @keyup.enter.native="searchGoods"
             :on-icon-click="searchGoods">
           </el-input>
-          <el-button class="add_num_btn fr" type="text">已添加：{{addedGoodsCount}} 个商品</el-button>
+          <v-btn class="add_num_btn fr" type="text">已添加：{{addedGoodsCount}} 个商品</v-btn>
         </div>
       </header>
 
@@ -62,118 +62,121 @@
   </div>
 </template>
 <script>
-  import GoodsMenu from 'base/goods-menu/goods-menu'
-  import GoodsTableLayout from './goods-table-layout'
-  import { mapState } from 'vuex'
+import GoodsMenu from "base/goods-menu/goods-menu";
+import GoodsTableLayout from "./goods-table-layout";
+import { mapState } from "vuex";
 
-  export default {
-    components: {
-      GoodsMenu,
-      GoodsTableLayout,
+export default {
+  components: {
+    GoodsMenu,
+    GoodsTableLayout
+  },
+
+  data() {
+    const { order_id } = this.$route.params;
+    return {
+      order_id,
+      searchKey: "",
+      goodsListData: [],
+      addedGoodsCount: 0, // 该订单里已添加的商品数
+      pageCount: 0,
+      pageIndex: 1,
+      breadData: {},
+      order_name: "",
+      goodsColor: ""
+    };
+  },
+
+  created() {
+    // pageIndex 一旦改变就触发 onPageChange 事件有点不妥，故加了这个变量做限制
+    this.onPageChangeLock = false;
+
+    this.$store.dispatch("fetchGoodsList", {
+      ...this.$route.query,
+      order_id: this.order_id
+    });
+    this.$store.dispatch("fetchGoodsColorsList");
+  },
+
+  computed: mapState(["fetchGoodsListParams", "goodsList", "goodsColorsList"]),
+
+  watch: {
+    goodsList(data) {
+      const {
+        goodsListVos = [],
+        goods_count,
+        page_count,
+        title = {},
+        order_name = ""
+      } = data;
+      this.goodsListData = goodsListVos || [];
+      this.breadData = title || {};
+      this.addedGoodsCount = goods_count;
+      this.pageCount = page_count;
+      this.order_name = order_name;
     },
 
-    data() {
-      const { order_id } = this.$route.params
-      return {
-        order_id,
-        searchKey: '',
-        goodsListData: [],
-        addedGoodsCount: 0, // 该订单里已添加的商品数
-        pageCount: 0,
-        pageIndex: 1,
-        breadData: {},
-        order_name: '',
-        goodsColor: '',
+    // 把 params 序列化到 URL 的 query 里，
+    // TODO: 但是网页刷新后并没有反过来把 URL query 里的参数分配到 params 里
+    fetchGoodsListParams(params) {
+      this.$router.replace({
+        query: params
+      });
+    },
+
+    goodsColor(goods_color) {
+      // 改变 pageIndex 时会自动触发 onPageChange 事件，故需要设置 onPageChangeLock
+      if (this.pageIndex !== 1) {
+        this.onPageChangeLock = true;
+        this.pageIndex = 1;
       }
+      const params = {
+        goods_color,
+        page_index: this.pageIndex,
+        menu_id: 0,
+        level: 1
+      };
+      this.$store.dispatch("fetchGoodsList", params);
+    }
+  },
+
+  methods: {
+    searchGoods() {
+      // 只要搜索传值了，后端会把所有的条件置空去搜索，尽管这样前端还是得把一些条件给清空
+      // 改变 pageIndex 时会自动触发 onPageChange 事件，故需要设置 onPageChangeLock
+      if (this.pageIndex !== 1) {
+        this.onPageChangeLock = true;
+        this.pageIndex = 1;
+      }
+      const params = {
+        search_key: this.searchKey,
+        page_index: this.pageIndex,
+        menu_id: 0,
+        level: 1
+      };
+      this.$store.dispatch("fetchGoodsList", params);
     },
 
-    created() {
-      // pageIndex 一旦改变就触发 onPageChange 事件有点不妥，故加了这个变量做限制
-      this.onPageChangeLock = false
-
-      this.$store.dispatch('fetchGoodsList', {...this.$route.query, order_id: this.order_id})
-      this.$store.dispatch('fetchGoodsColorsList')
+    onPageChange(page_index) {
+      if (this.onPageChangeLock) {
+        this.onPageChangeLock = false;
+        return;
+      }
+      this.pageIndex = page_index;
+      this.$store.dispatch("fetchGoodsList", { page_index });
     },
 
-    computed: mapState(['fetchGoodsListParams', 'goodsList', 'goodsColorsList']),
-
-    watch: {
-      goodsList(data) {
-        const {
-          goodsListVos = [],
-          goods_count,
-          page_count,
-          title = {},
-          order_name = '',
-        } = data
-        this.goodsListData = goodsListVos || []
-        this.breadData = title || {}
-        this.addedGoodsCount = goods_count
-        this.pageCount = page_count
-        this.order_name = order_name
-      },
-
-      // 把 params 序列化到 URL 的 query 里，
-      // TODO: 但是网页刷新后并没有反过来把 URL query 里的参数分配到 params 里
-      fetchGoodsListParams(params) {
-        this.$router.replace({
-          query: params
-        })
-      },
-
-      goodsColor(goods_color) {
-        // 改变 pageIndex 时会自动触发 onPageChange 事件，故需要设置 onPageChangeLock
-        if(this.pageIndex !== 1) {
-          this.onPageChangeLock = true
-          this.pageIndex = 1
-        }
-        const params = {
-          goods_color,
-          page_index: this.pageIndex,
-          menu_id: 0,
-          level: 1,
-        }
-        this.$store.dispatch('fetchGoodsList', params)
-      },
-    },
-
-    methods:{
-      searchGoods() {
-        // 只要搜索传值了，后端会把所有的条件置空去搜索，尽管这样前端还是得把一些条件给清空
-        // 改变 pageIndex 时会自动触发 onPageChange 事件，故需要设置 onPageChangeLock
-        if(this.pageIndex !== 1) {
-          this.onPageChangeLock = true
-          this.pageIndex = 1
-        }
-        const params = {
-          search_key: this.searchKey,
-          page_index: this.pageIndex,
-          menu_id: 0,
-          level: 1,
-        }
-        this.$store.dispatch('fetchGoodsList', params)
-      },
-
-      onPageChange(page_index) {
-        if(this.onPageChangeLock) {
-          this.onPageChangeLock = false
-          return
-        }
-        this.pageIndex = page_index
-        this.$store.dispatch('fetchGoodsList', {page_index})
-      },
-
-      onMenuChange(params) {
-        // 商品菜单变动时清空 searchKey
-        this.searchKey = ''
-        params = {
-          ...params,
-          search_key: '',
-        }
-        this.$store.dispatch('fetchGoodsList', params)
-      },
-    },
+    onMenuChange(params) {
+      // 商品菜单变动时清空 searchKey
+      this.searchKey = "";
+      params = {
+        ...params,
+        search_key: ""
+      };
+      this.$store.dispatch("fetchGoodsList", params);
+    }
   }
+};
 </script>
 <style lang="sass" scoped>
   .container

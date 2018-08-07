@@ -82,22 +82,22 @@
 
     <el-table-column label="操作" min-width="130">
       <template slot-scope="scope">
-        <el-button type="primary" class="add_goods_btn" @click="addGoods(scope.$index)">添加商品</el-button>
+        <v-btn type="primary" class="add_goods_btn" @click="addGoods(scope.$index)">添加商品</v-btn>
         <div class="btn_area">
-          <el-button
+          <v-btn
             size="small"
             class="btn_cad"
             :disabled="!scope.row.cad"
             @click="windowOpen(scope.row.cad)">
             CAD
-          </el-button>
-          <el-button
+          </v-btn>
+          <v-btn
             size="small"
             class="btn_sku"
             :disabled="!scope.row.su"
             @click="windowOpen(scope.row.su)">
             SU
-          </el-button>
+          </v-btn>
         </div>
       </template>
     </el-table-column>

@@ -37,7 +37,7 @@
       </ul>
     </div>
 
-    <el-button class="submit_btn" type="success" @click="onSubmit">提交</el-button>
+    <v-btn class="submit_btn" type="success" @click="onSubmit">提交</v-btn>
 
     <el-upload
       class="upload_container"
@@ -52,7 +52,7 @@
       :on-success="handleUploadSuccess"
       :on-error="handleUploadError"
       :auto-upload="true">
-      <el-button slot="trigger" size="small" type="primary">选取图片</el-button>
+      <v-btn slot="trigger" size="small" type="primary">选取图片</v-btn>
       <div slot="tip" class="el-upload__tip">每次只能上传一张，格式为 jpg/png ，且不超过 10M</div>
     </el-upload>
   </section>

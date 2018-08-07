@@ -3,24 +3,32 @@
     <header class="header_nav">
       <div class="container">
         <router-link to="/"><img src="~common/image/logo.png" class="logo" /></router-link>
-        <el-button class="fr logout" @click="logout">注销登录</el-button>
-        <el-input
+        <v-btn class="fr logout" @click="logout">注销登录</v-btn>
+        <v-text-field
           class="search_input fr"
           placeholder="请输入订单名称"
           icon="search"
           v-model="search_key"
           @keyup.enter.native="searchOrder"
           :on-icon-click="searchOrder">
-        </el-input>
-        <el-button class="add_order fr" @click="dialogFormVisible = true" type="primary">新建订单</el-button>
-
-        <el-dialog title="请输入订单名称" :visible.sync="dialogFormVisible">
-          <el-input v-model="order_name" @keyup.enter.native="addOrder" placeholder="请输入内容订单名称"></el-input>
-          <div slot="footer" class="dialog-footer">
-            <el-button @click="dialogFormVisible = false">取 消</el-button>
-            <el-button type="primary" @click="addOrder">确 定</el-button>
-          </div>
-        </el-dialog>
+        </v-text-field>
+        <v-btn class="add_order fr" @click="dialogFormVisible = true" type="primary">新建订单</v-btn>
+        <v-dialog v-model="dialogFormVisible" width="500">
+      <v-card>
+        <v-card-title
+          class="headline grey lighten-2"
+          primary-title
+        >请输入订单名称</v-card-title>
+        <v-form>
+          <v-text-field v-model="order_name" @keyup.enter.native="addOrder" placeholder="请输入内容订单名称"></v-text-field>
+        </v-form>
+          <v-card-actions>
+          <v-spacer></v-spacer>
+            <v-btn flat @click="dialogFormVisible = false">取消</v-btn>
+            <v-btn color='error' @click="addOrder">确定</v-btn>
+          </v-card-actions>
+      </v-card>
+        </v-dialog>
       </div>
     </header>
 
@@ -36,7 +44,7 @@
             备注：{{order.comment || '暂无备注'}}
           </span>
 
-          <el-button @click.stop.native="downloadPDF(order.objectId)" size="small" type="primary" class="export_order_btn fr">导出订单</el-button>
+          <v-btn @click.stop.native="downloadPDF(order.objectId)" size="small" type="primary" class="export_order_btn fr">导出订单</v-btn>
 
           <router-link tag="i" :to="/order-detail/ + order.objectId" class="i fr i-edit"></router-link>
           <span class="fr">

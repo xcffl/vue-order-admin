@@ -2,7 +2,7 @@
   <div class="goods_comment_container">
     <h2 class="h2">评论列表</h2>
     <div class="add_comment_btn">
-      <el-button class="fr" size="large" @click="addComment" type="primary">添加评论</el-button>
+      <v-btn class="fr" size="large" @click="addComment" type="primary">添加评论</v-btn>
     </div>
     <ul class="comment_list">
       <li class="comment_box" v-for="(comment, index) in commentList" :key="index">
@@ -12,10 +12,10 @@
           <span class="time">评论时间：{{comment.createdTime}}</span>
 
           <div class="btn_area">
-            <el-button :disabled="!comment.power" type="primary" @click="editComment(comment)" size="small">
+            <v-btn :disabled="!comment.power" type="primary" @click="editComment(comment)" size="small">
               修改评论
-            </el-button>
-            <el-button :disabled="!comment.power" type="danger" @click="deleteComment(comment.goodsCommentId)" size="small">删除评论</el-button>
+            </v-btn>
+            <v-btn :disabled="!comment.power" type="danger" @click="deleteComment(comment.goodsCommentId)" size="small">删除评论</v-btn>
           </div>
         </header>
 
