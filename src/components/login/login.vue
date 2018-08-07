@@ -17,8 +17,6 @@
   </div>
 </template>
 <script>
-import { AV } from "common/js/initLeanCloud";
-
 console.log("logining");
 
 export default {
@@ -46,7 +44,7 @@ export default {
 
       // LeanCloud - 登录
       // https://leancloud.cn/docs/leanstorage_guide-js.html#用户名和密码登录
-      AV.User.logIn(userName, pwd).then(
+      this.$AV.User.logIn(userName, pwd).then(
         function(loginedUser) {
           // 登录成功，跳转到商品 list 页面
           console.log("Login!");
